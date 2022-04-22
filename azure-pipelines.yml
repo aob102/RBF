@@ -1,0 +1,71 @@
+resources:
+  repositories:
+    - repository: TESTS_FONCTIONNELS
+      type: git
+      name: TESTS_FONCTIONNELS/TESTS_FONCTIONNELS
+
+variables:
+- name: projectName
+  value: TIPOCA_TEST_AUTO
+
+stages:
+- stage:
+
+  jobs:
+
+  - job : Checkout_code 
+    steps:
+      - checkout: self
+      - checkout: TESTS_FONCTIONNELS
+
+      - task: CmdLine@2
+        inputs:
+          script: |
+            rm -r */.git
+            cp -r ./TESTS_FONCTIONNELS/main.tf ./
+            cp -r ./$(projectName)/* ./
+            rm -r ./TESTS_FONCTIONNELS
+            rm -r ./$(projectName)
+          workingDirectory: '$(Build.SourcesDirectory)'
+
+      - task: PublishBuildArtifacts@1
+        inputs:
+          PathtoPublish: '$(Build.SourcesDirectory)'
+          ArtifactName: 'checkout_code_artifacts'
+          publishLocation: 'Container'
+  
+  - job: Build_infra_Run_Tests
+
+    pool:
+      vmImage: 'ubuntu-latest'
+
+    steps:
+
+    - task: DownloadBuildArtifacts@0
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: 'checkout_code_artifacts'
+        downloadPath: '$(Build.SourcesDirectory)'
+        cleanDestinationFolder: true
+
+    - task: CmdLine@2
+      inputs:
+        script: |
+          mv ./checkout_code_artifacts/* ./
+          rm -r ./checkout_code_artifacts
+        workingDirectory: '$(Build.SourcesDirectory)'
+
+    - template: common_build-infra.yml@TESTS_FONCTIONNELS
+
+    dependsOn: Checkout_code
+  
+  - job: Delete_infra
+
+    pool:
+      vmImage: 'vs2017-win2016'
+
+    steps:
+    - template: common_delete-infra.yml@TESTS_FONCTIONNELS
+    dependsOn: Build_infra_Run_Tests
+    condition: always()

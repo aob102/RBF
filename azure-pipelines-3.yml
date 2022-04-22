@@ -1,0 +1,34 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-18.04'
+
+resources:
+  containers:
+  - container: tester
+    image: sogetilabsfrance.azurecr.io/lgp-boilerplate/lgp-boilerplate-base-test:25288
+    endpoint: sogetilabsfrance
+    options: --user root
+
+jobs:
+- job: do_that
+  container: tester
+  steps:
+  - script: |
+      sudo su
+      conda env create -f conda.yaml --prefix ~/env_conda
+      conda activate ~/env_conda
+    displayName: Env Creation
+
+  - script: |
+      sudo su
+      mv SOCLE/Libs/SELENIUM.robot SOCLE/Libs/selenium.robot
+      export chromebinary="/usr/bin/google-chrome"
+      sed -i 's|${PLATFORM}    CHROME|${PLATFORM}    CUSTOM_CHROME|g' SOCLE/baseSocle.robot
+    displayName: Tests Configuration
+
+  - script: |
+      sudo su
+      python -m robot --report NONE --outputdir output TESTS/TestSuites
+    displayName: Tests Execution

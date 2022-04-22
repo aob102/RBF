@@ -1,0 +1,34 @@
+trigger:
+- main
+
+resources:
+- repo: self
+
+variables:
+  dockerRegistryServiceConnection: 'ee2c47b8-f430-41bd-a7f7-2437a8bf1dec'
+  imageRepository: 'lgp-boilerplate/lgp-boilerplate-base-test'
+  containerRegistry: 'sogetilabsfrance.azurecr.io'
+  dockerfilePath: 'Dockerfile'
+  tag: '$(Build.BuildId)'
+
+  # Agent VM image name
+  vmImageName: 'ubuntu-latest'
+
+stages:
+- stage: Build
+  displayName: Build and push stage
+  jobs:
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: $(vmImageName)
+    steps:
+    - task: Docker@2
+      displayName: Build and push an image to container registry
+      inputs:
+        command: buildAndPush
+        repository: $(imageRepository)
+        dockerfile: $(dockerfilePath)
+        containerRegistry: $(dockerRegistryServiceConnection)
+        tags: |
+          $(tag)

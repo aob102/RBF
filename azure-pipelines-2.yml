@@ -1,0 +1,32 @@
+# resources:
+#   containers:
+#   - container: tester
+#     image: sogetilabsfrance.azurecr.io/lgp-boilerplate/lgp-boilerplate-base-test:25306
+#     endpoint: sogetilabsfrance
+
+pool:
+  vmImage: 'ubuntu-18.04'
+
+jobs:
+- job:
+  displayName: From environment.yml
+  steps:
+    - script: |
+        echo "##vso[task.prependpath]$CONDA/bin"
+        printenv
+
+  # container: tester
+
+  # steps:
+  # - bash: echo "##vso[task.prependpath]$CONDA/bin"
+  #   displayName: Add conda to PATH
+
+  # - script: conda env create -f conda.yaml --prefix test
+  #   displayName: Create Anaconda environment
+
+  # - bash: |
+  #     source activate test
+  #     mv SOCLE/Libs/SELENIUM.robot SOCLE/Libs/selenium.robot
+  #     export chromebinary="/usr/bin/google-chrome"
+  #     sed -i 's|${PLATFORM}    CHROME|${PLATFORM}    CUSTOM_CHROME|g' SOCLE/baseSocle.robot
+  #   displayName: pytest
